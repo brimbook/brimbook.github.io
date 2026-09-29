@@ -200,17 +200,17 @@ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 function say(t,err){const m=$('#msg');m.textContent=t||'';m.classList.toggle('err',!!err);}
 
 /* ---------- timing math (copied from the original Brim Book) ---------- */
-// Spike: after the speed-up it beeps 2x per second. Defuse 7s, half 3.5s, Brim molly burns 8s.
-// Ticks = ceil(2*t), never early.
+// Spike: after the speed-up it beeps 2x per second. Defuse 7s, half 3.5s.
+// Both rows assume the defuser tanks 2s of fire. Ticks = ceil(2*t), never early.
 const BPS=2;
 function shootWindow(t){
   const x=parseFloat(t); if(isNaN(x))return null;
   const ticks=s=>Math.max(0,Math.ceil(Math.round(s*BPS*10)/10));
   const sec=s=>Math.max(0,Math.round(s*10)/10);
-  return {full:ticks(7-x),half:ticks(8.5-x),ext:ticks(11-x),fullS:sec(7-x),halfS:sec(8.5-x),extS:sec(11-x)};
+  return {fresh:ticks(7-x),half:ticks(10.5-x),freshS:sec(7-x),halfS:sec(10.5-x)};
 }
 const tick=n=>n===0?'on speed-up':n+(n===1?' beep':' beeps');
-const windowText=t=>{const s=shootWindow(t);return s?'full: '+tick(s.full)+' · half: '+tick(s.half)+' · tanked: '+tick(s.ext):'';};
+const windowText=t=>{const s=shootWindow(t);return s?'fresh: '+tick(s.fresh)+' · half done: '+tick(s.half):'';};
 const isPostPlant=r=>!r.use||r.use==='post-plant';
 // Phoenix ult lasts 10s. Land the molly ~1s before it ends: shoot at 9 - landTime.
 const phoenixLine=t=>{const x=parseFloat(t);if(isNaN(x))return '';const s=Math.round((9-x)*10)/10;return 'shoot '+(s<=0?'as he ults':s+'s after he ults');};
@@ -287,7 +287,7 @@ function openV(i){
   $('#vImg').src=urls.get(r.id);
   $('#vNotes').textContent=r.notes||'';
   const s=isPostPlant(r)?shootWindow(r.time):null;
-  $('#vSpike').textContent=s?'After the speed-up (2 beeps/s): full → shoot '+tick(s.full)+(s.full?' ('+s.fullS+'s)':'')+'. Half → '+tick(s.half)+(s.half?' ('+s.halfS+'s)':'')+'. Tanked (150hp eats the fire, still no half) → '+tick(s.ext)+(s.ext?' ('+s.extS+'s)':'')+'.'
+  $('#vSpike').textContent=s?'After the speed-up (2 beeps/s): fresh spike (no defuse started, needs 7s) → shoot '+tick(s.fresh)+(s.fresh?' ('+s.freshS+'s)':'')+'. Half done (spike at the half checkpoint, needs 3.5s) → '+tick(s.half)+(s.half?' ('+s.halfS+'s)':'')+'. Both assume the defuser eats 2s of fire.'
     :r.use==='anti-phoenix'?'Anti-Phoenix: his ult lasts 10s. '+phoenixLine(r.time)+' so it lands about 1s before the ult ends.':'';
   resetDel();$('#viewer').hidden=false;document.body.style.overflow='hidden';$('#vClose').focus();
 }
@@ -421,7 +421,7 @@ function draw(){
   ctx.fillText(title,1000,150);ctx.textAlign='left';
   // info box
   let head='',rows=[];
-  if(o.timeOk&&o.use==='post-plant'){const s=shootWindow(o.time);head='after speed-up, 2 beeps/s';rows=[['Full:',tick(s.full)],['Half:',tick(s.half)],['Tanked:',tick(s.ext)]];}
+  if(o.timeOk&&o.use==='post-plant'){const s=shootWindow(o.time);head='after speed-up, 2 beeps/s';rows=[['Fresh spike:',tick(s.fresh)],['Half done:',tick(s.half)]];}
   else if(o.timeOk&&o.use==='anti-phoenix'){head='anti-Phoenix';rows=[['',phoenixLine(o.time)]];}
   let boxL=W;
   if(rows.length){
