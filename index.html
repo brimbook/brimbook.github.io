@@ -42,6 +42,7 @@ header{position:sticky;top:0;z-index:5;background:linear-gradient(var(--bg) 85%,
 .banner{background:#3a1f14;border:1px solid var(--bad);color:var(--text);border-radius:6px;padding:10px 12px;margin-top:8px}
 .msg{min-height:1.4em;color:var(--gold2);font-size:14px;margin:6px 0}
 .msg.err{color:var(--bad)}
+.card.new{border-color:var(--gold2);box-shadow:0 0 0 3px var(--gold2);transition:box-shadow 1.5s}
 
 /* book */
 .group{margin-top:22px}
@@ -262,7 +263,7 @@ function render(){
     const [m,s]=k.split('|');const g=document.createElement('section');g.className='group';
     g.innerHTML='<h2>'+esc(m)+(s?' <small>'+esc(s)+' site</small>':'')+'</h2><div class="grid"></div>';
     groups.get(k).forEach(r=>{
-      const i=view.push(r)-1,b=document.createElement('button');b.className='card';
+      const i=view.push(r)-1,b=document.createElement('button');b.className='card';b.dataset.id=r.id;
       b.innerHTML='<img loading="lazy" alt=""><div class="meta"><div><div class="nm"></div><div class="sub"></div></div><div class="time"></div></div>';
       b.querySelector('img').src=urls.get(r.id);
       b.querySelector('.nm').textContent=r.name||'Untitled';
@@ -451,9 +452,14 @@ $('#saveBtn').onclick=async()=>{
   draw();const o=readForm();delete o.timeOk;
   const r={...o,id:crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2),order:Date.now(),created:Date.now(),png:await toBlob('image/jpeg',.9)};
   try{await tx('readwrite',s=>s.put(r));}catch(e){return say(storeErr(e),true);}
-  await persist();await load();say('Saved “'+(r.name||'Untitled')+'” to your book.');
+  await persist();
+  // back to the book with filters cleared, so the new card is guaranteed to be visible
+  map='';side='';q='';$('#q').value='';clearMaker();await load();tab(false);
+  say('Saved “'+(r.name||'Untitled')+'” to your book.');
+  const c=$('.card[data-id="'+r.id+'"]');if(c){c.classList.add('new');c.scrollIntoView({block:'center'});setTimeout(()=>c.classList.remove('new'),2500);}
 };
-$('#clearBtn').onclick=()=>{SLOTS.forEach(([k])=>setImg(k,null));$('#form').reset();draw();say('');};
+function clearMaker(){SLOTS.forEach(([k])=>setImg(k,null));$('#form').reset();draw();}
+$('#clearBtn').onclick=()=>{clearMaker();say('');};
 
 /* ---------- tabs + boot ---------- */
 function tab(make){$('#make').hidden=!make;$('#book').hidden=make;$('#bookTools').hidden=make;$('#tabMake').classList.toggle('on',make);$('#tabBook').classList.toggle('on',!make);if(make)draw();}
