@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Brim Book</title>
+<meta name="description" content="Make Valorant Brimstone lineup posters and keep them in a book stored in your own browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#15120d;--panel:#1f1a13;--panel2:#2a2319;--line:#3a3125;
+  --text:#f2e8d3;--muted:#a2957c;--gold:#d9a92f;--gold2:#f0c75a;--bad:#ff7a5a;
+  --display:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+  --ui:"Barlow","Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--ui);font-size:15px;line-height:1.4;margin:0;padding:0 16px 32px;overflow-x:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+[hidden]{display:none!important}
+
+header{position:sticky;top:0;z-index:5;background:linear-gradient(var(--bg) 85%,transparent);margin-inline:-16px;padding:14px 16px 10px;display:flex;flex-direction:column;gap:10px}
+.brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.brand h1{font-family:var(--display);font-weight:700;font-size:34px;line-height:1;margin:0;color:var(--gold)}
+.brand .count{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.brand .tabs{margin-left:auto;display:flex;gap:6px}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.row .lbl{color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-right:2px}
+.chip,.btn{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-weight:600;font-size:13px;letter-spacing:.02em;text-transform:uppercase}
+.chip.on,.btn.gold{background:var(--gold);border-color:var(--gold);color:#1a1409}
+.chip.side.on{background:var(--panel2);border-color:var(--gold);color:var(--gold2)}
+.btn{border-radius:6px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.bad{color:var(--bad);border-color:var(--bad)}
+.search{flex:1 1 180px;min-width:0;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:7px 10px}
+.search input{flex:1;min-width:0;background:none;border:0;font-size:15px}
+.banner{background:#3a1f14;border:1px solid var(--bad);color:var(--text);border-radius:6px;padding:10px 12px;margin-top:8px}
+.msg{min-height:1.4em;color:var(--gold2);font-size:14px;margin:6px 0}
+.msg.err{color:var(--bad)}
+
+/* book */
+.group{margin-top:22px}
+.group h2{font-family:var(--display);font-weight:600;font-size:26px;margin:0 0 10px;display:flex;align-items:baseline;gap:10px}
+.group h2 small{font-family:var(--ui);font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:12px}
+.card{display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;padding:0;transition:transform .12s,border-color .12s}
+.card:hover{transform:translateY(-2px);border-color:var(--gold)}
+.card img{display:block;width:100%;aspect-ratio:2000/1414;object-fit:cover;background:#000}
+.card .meta{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 11px}
+.card .meta>div:first-child{min-width:0;flex:1}
+.card .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .sub{color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.time{font-family:var(--display);font-weight:700;color:var(--gold);font-size:22px;line-height:1;white-space:nowrap}
+.time small{font-size:14px;margin-left:2px}
+.empty{color:var(--muted);padding:40px 0;text-align:center}
+.empty b{color:var(--text)}
+.bookbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:28px;padding-top:14px;border-top:1px solid var(--line)}
+
+/* maker */
+.maker{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:18px;align-items:start;margin-top:8px}
+@media (max-width:820px){.maker{grid-template-columns:minmax(0,1fr)}}
+.form{display:flex;flex-direction:column;gap:10px}
+.form label{display:flex;flex-direction:column;gap:4px;color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.form input,.form select,.form textarea{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:15px;text-transform:none;letter-spacing:0;font-weight:400;width:100%;min-width:0}
+.form textarea{resize:vertical;min-height:60px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{color:var(--bad);font-size:12px;text-transform:none;letter-spacing:0}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.slot{position:relative;aspect-ratio:16/10;border:1px dashed var(--line);border-radius:6px;background:var(--panel) center/cover no-repeat;display:flex;align-items:flex-end;padding:6px;cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);overflow:hidden}
+.slot span{background:rgba(21,18,13,.85);padding:2px 6px;border-radius:4px}
+.slot:focus{border-style:solid;border-color:var(--gold2)}
+.slot.drag{border-color:var(--gold2);background-color:var(--panel2)}
+.slot .x{position:absolute;top:4px;right:4px;background:rgba(21,18,13,.85);border-radius:4px;padding:0 7px;font-size:16px;color:var(--text)}
+.slotnote{color:var(--muted);font-size:12px}
+.preview canvas{width:100%;height:auto;display:block;border-radius:6px;background:#000;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+/* viewer */
+.viewer{position:fixed;inset:0;z-index:20;background:rgba(10,8,5,.95);display:flex;flex-direction:column;padding:10px 12px 12px}
+.viewer .top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:4px 4px 8px}
+.viewer .top .nm{font-family:var(--display);font-size:28px;font-weight:600;line-height:1.1}
+.viewer .top .where{color:var(--muted);font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.viewer .spacer{flex:1}
+.viewer .top .time{font-size:34px}
+.viewer .stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
+.viewer .stage img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+.viewer .notes{padding:10px 4px 0;color:var(--gold2);font-family:var(--display);font-size:20px;font-weight:600;text-align:center}
+.viewer .spike{padding:6px 4px 0;color:var(--muted);font-size:13px;text-align:center;max-width:70ch;margin:0 auto}
+.viewer .nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:64px;background:rgba(31,26,19,.85);border:1px solid var(--line);border-radius:6px;font-size:24px;color:var(--gold)}
+.viewer .nav.prev{left:0}.viewer .nav.next{right:0}
+.viewer .actions{justify-content:center}
+@media (max-width:520px){.viewer .nav{display:none}.viewer .top .nm{font-size:22px}}
+dialog{background:var(--panel);color:var(--text);border:1px solid var(--gold);border-radius:8px;width:min(420px,calc(100% - 32px));padding:16px}
+dialog::backdrop{background:rgba(0,0,0,.7)}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>Brim Book</h1>
+    <span class="count" id="count"></span>
+    <div class="tabs"><button class="chip on" id="tabBook">Book</button><button class="chip" id="tabMake">+ New lineup</button></div>
+  </div>
+  <div id="bookTools" style="display:grid;gap:10px">
+    <label class="search"><span aria-hidden="true">⌕</span><input id="q" type="search" placeholder="search a name, spot, map…" autocomplete="off"></label>
+    <div class="row" id="maps"><span class="lbl">Map</span></div>
+    <div class="row" id="sides"><span class="lbl">Side</span>
+      <button class="chip side on" data-side="">Both</button>
+      <button class="chip side" data-side="attack">Attack</button>
+      <button class="chip side" data-side="defense">Defense</button>
+    </div>
+  </div>
+  <div class="banner" id="banner" hidden>Your browser won’t save lineups here (private mode or storage blocked). The poster maker still works: use <b>Download PNG</b>.</div>
+  <div class="msg" id="msg" role="status" aria-live="polite"></div>
+</header>
+
+<main id="book">
+  <div id="groups"><div class="empty">Loading your lineups…</div></div>
+  <div class="bookbar">
+    <button class="btn" id="exportBtn">Export book</button>
+    <button class="btn" id="importBtn">Import book</button>
+    <input type="file" id="importFile" accept=".json,application/json" hidden>
+    <span class="slotnote" style="align-self:center">Lineups live only in this browser. Export to back up or trade books.</span>
+  </div>
+</main>
+
+<main id="make" hidden>
+  <div class="maker">
+    <form class="form" id="form" autocomplete="off" onsubmit="return false">
+      <div class="slots" id="slots"></div>
+      <div class="slotnote">Click a box to pick a file, drop one on it, or focus it and paste (Ctrl+V). Pasting anywhere else fills the next empty box.</div>
+      <input type="file" id="slotFile" accept="image/*" hidden>
+      <label>Name<input name="name" placeholder="e.g. A default from spawn"></label>
+      <div class="two">
+        <label>Map<input name="map" list="mapList"></label>
+        <label>Site<input name="site" placeholder="A / B / C / mid"></label>
+      </div>
+      <datalist id="mapList"><option>Abyss<option>Ascent<option>Bind<option>Breeze<option>Corrode<option>Fracture<option>Haven<option>Icebox<option>Lotus<option>Pearl<option>Split<option>Sunset</datalist>
+      <div class="two">
+        <label>Side<select name="side"><option value="attack">Attack</option><option value="defense">Defense</option><option value="both">Both</option></select></label>
+        <label>Land time (s)<input name="time" type="number" step="0.1" min="0" inputmode="decimal" placeholder="5.2"></label>
+      </div>
+      <div class="hint" id="timeHint" hidden>Land time must be a number, 0 or more. No beep box until it is.</div>
+      <label>Use<select name="use"><option value="post-plant">Post-plant</option><option value="anti-phoenix">Anti-Phoenix</option><option value="other">Other</option></select></label>
+      <label>Notes<textarea name="notes" maxlength="200" placeholder="optional, drawn on the poster"></textarea></label>
+    </form>
+    <div class="preview">
+      <canvas id="poster" width="2000" height="1414"></canvas>
+      <div class="actions">
+        <button class="btn gold" id="saveBtn">Save to book</button>
+        <button class="btn" id="dlBtn">Download PNG</button>
+        <button class="btn" id="clearBtn">Clear</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="viewer" id="viewer" hidden>
+  <div class="top">
+    <div><div class="where" id="vWhere"></div><div class="nm" id="vName"></div></div>
+    <div class="spacer"></div>
+    <div class="time" id="vTime"></div>
+    <button class="btn" id="vClose">Close</button>
+  </div>
+  <div class="stage">
+    <button class="nav prev" id="vPrev" aria-label="Previous">‹</button>
+    <img id="vImg" alt="">
+    <button class="nav next" id="vNext" aria-label="Next">›</button>
+  </div>
+  <div class="notes" id="vNotes"></div>
+  <div class="spike" id="vSpike"></div>
+  <div class="actions">
+    <button class="btn" id="vDl">Download</button>
+    <button class="btn" id="vEdit">Edit details</button>
+    <button class="btn bad" id="vDel">Delete</button>
+  </div>
+</div>
+
+<dialog id="editDlg">
+  <form class="form" method="dialog" id="editForm">
+    <label>Name<input name="name"></label>
+    <div class="two"><label>Map<input name="map" list="mapList"></label><label>Site<input name="site"></label></div>
+    <label>Side<select name="side"><option value="attack">Attack</option><option value="defense">Defense</option><option value="both">Both</option></select></label>
+    <label>Notes<textarea name="notes" maxlength="200"></textarea></label>
+    <div class="slotnote">Land time and the poster image are baked in. To change them, make a new poster.</div>
+    <div class="actions"><button class="btn gold" value="save">Save</button><button class="btn" value="cancel">Cancel</button></div>
+  </form>
+</dialog>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function say(t,err){const m=$('#msg');m.textContent=t||'';m.classList.toggle('err',!!err);}
+
+/* ---------- timing math (copied from the original Brim Book) ---------- */
+// Spike: after the speed-up it beeps 2x per second. Defuse 7s, half 3.5s, Brim molly burns 8s.
+// Ticks = ceil(2*t), never early.
+const BPS=2;
+function shootWindow(t){
+  const x=parseFloat(t); if(isNaN(x))return null;
+  const ticks=s=>Math.max(0,Math.ceil(Math.round(s*BPS*10)/10));
+  const sec=s=>Math.max(0,Math.round(s*10)/10);
+  return {full:ticks(7-x),half:ticks(8.5-x),ext:ticks(11-x),fullS:sec(7-x),halfS:sec(8.5-x),extS:sec(11-x)};
+}
+const tick=n=>n===0?'on speed-up':n+(n===1?' beep':' beeps');
+const windowText=t=>{const s=shootWindow(t);return s?'full: '+tick(s.full)+' · half: '+tick(s.half)+' · tanked: '+tick(s.ext):'';};
+const isPostPlant=r=>!r.use||r.use==='post-plant';
+// Phoenix ult lasts 10s. Land the molly ~1s before it ends: shoot at 9 - landTime.
+const phoenixLine=t=>{const x=parseFloat(t);if(isNaN(x))return '';const s=Math.round((9-x)*10)/10;return 'shoot '+(s<=0?'as he ults':s+'s after he ults');};
+const useText=r=>isPostPlant(r)?windowText(r.time):r.use==='anti-phoenix'?(phoenixLine(r.time)||'anti-Phoenix'):'';
+const plural=n=>n+(n===1?' lineup':' lineups');
+const fmtT=t=>t==null||t===''?'':t+'s';
+
+/* ---------- storage (IndexedDB, this browser only) ---------- */
+let db=null;
+function openDB(){return new Promise((res,rej)=>{
+  let r;try{r=indexedDB.open('brim-book',1);}catch(e){return rej(e);}
+  r.onupgradeneeded=()=>r.result.createObjectStore('lineups',{keyPath:'id'});
+  r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);r.onblocked=()=>rej(new Error('blocked'));
+});}
+// Runs fn(store) in one transaction; resolves with the last request's result once committed.
+function tx(mode,fn){return new Promise((res,rej)=>{
+  let t;try{t=db.transaction('lineups',mode);}catch(e){return rej(e);}
+  const req=fn(t.objectStore('lineups'));
+  t.oncomplete=()=>res(req&&req.result);t.onabort=()=>rej(t.error||new Error('aborted'));
+});}
+const storeErr=e=>e&&e.name==='QuotaExceededError'?'Out of browser storage. Export your book to back it up, then delete some lineups.':'Could not save: '+(e&&e.message||e);
+
+/* ---------- book ---------- */
+let all=[],urls=new Map(),map='',side='',q='',view=[],vi=-1;
+try{map=localStorage.getItem('brim.map')||'';}catch(e){}
+async function load(){
+  if(!db)return;
+  try{all=await tx('readonly',s=>s.getAll());}catch(e){say('Could not read your book: '+e.message,true);all=[];}
+  all.sort((a,b)=>(a.order||0)-(b.order||0));
+  urls.forEach(u=>URL.revokeObjectURL(u));urls=new Map(all.map(r=>[r.id,URL.createObjectURL(r.png)]));
+  if(map&&!all.some(r=>r.map===map))map='';
+  render();
+}
+function render(){
+  try{localStorage.setItem('brim.map',map);}catch(e){}
+  const row=$('#maps');row.querySelectorAll('.chip').forEach(c=>c.remove());
+  ['',...new Set(all.map(r=>r.map).filter(Boolean))].sort().forEach(v=>{const b=document.createElement('button');b.className='chip'+(map===v?' on':'');b.textContent=v||'All';b.onclick=()=>{map=v;render();};row.appendChild(b);});
+  document.querySelectorAll('.chip.side').forEach(c=>c.classList.toggle('on',c.dataset.side===side));
+  const needle=q.trim().toLowerCase();
+  view=all.filter(r=>(!map||r.map===map)&&(!side||!r.side||r.side==='both'||r.side===side)&&(!needle||[r.name,r.map,r.site,r.notes,r.side].join(' ').toLowerCase().includes(needle)));
+  $('#count').textContent=db?view.length+' of '+all.length+' lineups':'';
+  const g0=$('#groups');g0.innerHTML='';
+  if(!db){g0.innerHTML='<div class="empty"><b>Saving is off in this browser.</b><br>Make posters with “+ New lineup” and download them.</div>';return;}
+  if(!view.length){g0.innerHTML=all.length?'<div class="empty"><b>No matches.</b></div>':'<div class="empty"><b>Your book is empty.</b><br>Hit “+ New lineup” to make your first poster, or import a book.</div>';return;}
+  const groups=new Map();
+  view.forEach(r=>{const k=(r.map||'Unsorted')+'|'+(r.site||'');if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r);});
+  view=[];
+  [...groups.keys()].sort().forEach(k=>{
+    const [m,s]=k.split('|');const g=document.createElement('section');g.className='group';
+    g.innerHTML='<h2>'+esc(m)+(s?' <small>'+esc(s)+' site</small>':'')+'</h2><div class="grid"></div>';
+    groups.get(k).forEach(r=>{
+      const i=view.push(r)-1,b=document.createElement('button');b.className='card';
+      b.innerHTML='<img loading="lazy" alt=""><div class="meta"><div><div class="nm"></div><div class="sub"></div></div><div class="time"></div></div>';
+      b.querySelector('img').src=urls.get(r.id);
+      b.querySelector('.nm').textContent=r.name||'Untitled';
+      b.querySelector('.sub').textContent=[useText(r),r.notes?'note':''].filter(Boolean).join(' · ');
+      b.querySelector('.time').innerHTML=r.time!==''&&r.time!=null?esc(fmtT(r.time))+'<small>land</small>':'';
+      b.onclick=()=>openV(i);
+      g.querySelector('.grid').appendChild(b);
+    });
+    g0.appendChild(g);
+  });
+}
+$('#q').addEventListener('input',e=>{q=e.target.value;render();});
+document.querySelectorAll('.chip.side').forEach(c=>c.onclick=()=>{side=c.dataset.side;render();});
+
+/* viewer */
+function openV(i){
+  if(!view.length)return closeV();
+  vi=(i+view.length)%view.length;const r=view[vi];
+  $('#vWhere').textContent=[r.map,r.site?r.site+' site':'',r.side&&r.side!=='both'?r.side:''].filter(Boolean).join(' · ');
+  $('#vName').textContent=r.name||'Untitled';
+  $('#vTime').textContent=r.time!==''&&r.time!=null?fmtT(r.time)+' land':'';
+  $('#vImg').src=urls.get(r.id);
+  $('#vNotes').textContent=r.notes||'';
+  const s=isPostPlant(r)?shootWindow(r.time):null;
+  $('#vSpike').textContent=s?'After the speed-up (2 beeps/s): full → shoot '+tick(s.full)+(s.full?' ('+s.fullS+'s)':'')+'. Half → '+tick(s.half)+(s.half?' ('+s.halfS+'s)':'')+'. Tanked (150hp eats the fire, still no half) → '+tick(s.ext)+(s.ext?' ('+s.extS+'s)':'')+'.'
+    :r.use==='anti-phoenix'?'Anti-Phoenix: his ult lasts 10s. '+phoenixLine(r.time)+' so it lands about 1s before the ult ends.':'';
+  resetDel();$('#viewer').hidden=false;document.body.style.overflow='hidden';$('#vClose').focus();
+}
+function closeV(){$('#viewer').hidden=true;document.body.style.overflow='';vi=-1;}
+$('#vClose').onclick=closeV;
+$('#vPrev').onclick=()=>openV(vi-1);
+$('#vNext').onclick=()=>openV(vi+1);
+$('#viewer').addEventListener('click',e=>{if(e.target.classList.contains('stage'))closeV();});
+document.addEventListener('keydown',e=>{
+  if($('#viewer').hidden||$('#editDlg').open)return;
+  if(e.key==='Escape')closeV();if(e.key==='ArrowLeft')openV(vi-1);if(e.key==='ArrowRight')openV(vi+1);
+});
+let tx0=0;$('#viewer').addEventListener('touchstart',e=>{tx0=e.touches[0].clientX;},{passive:true});
+$('#viewer').addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-tx0;if(d>60)openV(vi-1);else if(d<-60)openV(vi+1);});
+const fileName=(r,ext)=>((r.name||'lineup').replace(/[^\w\- ]+/g,'').trim()||'lineup')+ext;
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);}
+$('#vDl').onclick=()=>{const r=view[vi];download(r.png,fileName(r,r.png.type==='image/png'?'.png':'.jpg'));};
+function resetDel(){const b=$('#vDel');b.textContent='Delete';b.dataset.arm='';}
+$('#vDel').onclick=async()=>{
+  const b=$('#vDel');
+  if(!b.dataset.arm){b.dataset.arm='1';b.textContent='Really delete? Click again';setTimeout(()=>{if(b.dataset.arm)resetDel();},4000);return;}
+  const r=view[vi];
+  try{await tx('readwrite',s=>s.delete(r.id));}catch(e){return say('Could not delete: '+e.message,true);}
+  say('Deleted “'+(r.name||'Untitled')+'”.');const i=vi;await load();view.length?openV(Math.min(i,view.length-1)):closeV();
+};
+$('#vEdit').onclick=()=>{const r=view[vi],f=$('#editForm');['name','map','site','side','notes'].forEach(k=>f.elements[k].value=r[k]||'');if(!r.side)f.elements.side.value='both';$('#editDlg').returnValue='';$('#editDlg').showModal();};
+$('#editDlg').addEventListener('close',async()=>{
+  if($('#editDlg').returnValue!=='save')return;
+  const f=$('#editForm'),r={...view[vi]};['name','map','site','side','notes'].forEach(k=>r[k]=f.elements[k].value.trim());
+  try{await tx('readwrite',s=>s.put(r));}catch(e){return say(storeErr(e),true);}
+  const id=r.id;await load();const i=view.findIndex(x=>x.id===id);i<0?closeV():openV(i);say('Saved.');
+});
+
+/* export / import */
+const toDataURL=b=>new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=()=>rej(fr.error);fr.readAsDataURL(b);});
+$('#exportBtn').onclick=async()=>{
+  if(!db)return say('Nothing to export: saving is off in this browser.',true);
+  if(!all.length)return say('Your book is empty.',true);
+  const lineups=await Promise.all(all.map(async r=>({...r,png:await toDataURL(r.png)})));
+  download(new Blob([JSON.stringify({app:'brim-book',version:1,lineups})],{type:'application/json'}),'brim-book-'+new Date().toISOString().slice(0,10)+'.json');
+  say('Exported '+plural(lineups.length)+'.');
+};
+$('#importBtn').onclick=()=>db?$('#importFile').click():say('Import needs saving, which is off in this browser.',true);
+const FIELDS=['name','map','site','side','time','use','notes'];
+$('#importFile').onchange=async e=>{
+  const file=e.target.files[0];e.target.value='';if(!file)return;
+  let recs;
+  try{ // parse + validate everything before touching the DB
+    const d=JSON.parse(await file.text());
+    if(!d||d.app!=='brim-book'||!Array.isArray(d.lineups))throw new Error('not a Brim Book export');
+    recs=await Promise.all(d.lineups.map(async(x,i)=>{
+      if(!x||typeof x.id!=='string'||!x.id||typeof x.png!=='string'||!/^data:image\/(png|jpeg|webp);base64,/.test(x.png))throw new Error('lineup #'+(i+1)+' is broken');
+      const png=await (await fetch(x.png)).blob();
+      const r={id:x.id,png,order:Number(x.order)||Date.now(),created:Number(x.created)||Date.now()};
+      FIELDS.forEach(k=>r[k]=x[k]==null?'':String(x[k]).slice(0,200));
+      return r;
+    }));
+  }catch(err){return say('Import failed, nothing changed: '+err.message,true);}
+  try{
+    const have=new Set(await tx('readonly',s=>s.getAllKeys()));
+    const fresh=recs.filter(r=>!have.has(r.id)&&have.add(r.id));
+    if(fresh.length)await tx('readwrite',s=>{fresh.forEach(r=>s.put(r));});
+    await persist();await load();
+    say('Imported '+plural(fresh.length)+(recs.length-fresh.length?', skipped '+(recs.length-fresh.length)+' already in your book':'')+'.');
+  }catch(err){say('Import failed, nothing changed. '+storeErr(err),true);}
+};
+let persisted=false;
+async function persist(){if(persisted)return;persisted=true;try{await navigator.storage?.persist?.();}catch(e){}}
+
+/* ---------- poster maker ---------- */
+const SLOTS=[['loc','Location (required)'],['mini','Minimap'],['ref','Reference (aim)'],['land','Land spot']];
+const imgs={},thumbs={};let pickFor=null;
+SLOTS.forEach(([k,label])=>{
+  const d=document.createElement('div');d.className='slot';d.tabIndex=0;d.dataset.k=k;d.setAttribute('role','button');d.setAttribute('aria-label',label+' image');
+  d.innerHTML='<span>'+label+'</span><button type="button" class="x" hidden aria-label="Remove">×</button>';
+  d.onclick=e=>{if(e.target.classList.contains('x')){setImg(k,null);return;}pickFor=k;$('#slotFile').click();};
+  d.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();d.click();}};
+  d.ondragover=e=>{e.preventDefault();d.classList.add('drag');};
+  d.ondragleave=()=>d.classList.remove('drag');
+  d.ondrop=e=>{e.preventDefault();d.classList.remove('drag');const f=[...e.dataTransfer.files].find(f=>f.type.startsWith('image/'));f?loadImg(k,f):say('That is not an image.',true);};
+  $('#slots').appendChild(d);
+});
+$('#slotFile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f&&pickFor)loadImg(pickFor,f);};
+document.addEventListener('paste',e=>{
+  if($('#make').hidden)return;
+  const f=[...(e.clipboardData?.files||[])].find(f=>f.type.startsWith('image/'));if(!f)return;
+  const a=document.activeElement,k=a?.classList?.contains('slot')?a.dataset.k:SLOTS.map(s=>s[0]).find(k=>!imgs[k]);
+  if(!k)return say('All four boxes are full. Focus a box, then paste to replace it.',true);
+  e.preventDefault();loadImg(k,f);
+});
+const MAX=2000; // huge screenshots get downscaled so the canvas and memory stay sane
+async function loadImg(k,file){
+  let bmp;try{bmp=await createImageBitmap(file);}catch(e){return say('Could not read that image.',true);}
+  let src=bmp;const sc=MAX/Math.max(bmp.width,bmp.height);
+  if(sc<1){src=document.createElement('canvas');src.width=Math.round(bmp.width*sc);src.height=Math.round(bmp.height*sc);src.getContext('2d').drawImage(bmp,0,0,src.width,src.height);bmp.close();}
+  setImg(k,src,URL.createObjectURL(file));say('');
+}
+function setImg(k,src,thumb){
+  if(imgs[k]&&imgs[k].close)imgs[k].close();
+  if(thumbs[k])URL.revokeObjectURL(thumbs[k]);
+  imgs[k]=src;thumbs[k]=thumb;
+  const d=$('.slot[data-k='+k+']');d.style.backgroundImage=thumb?'url("'+thumb+'")':'';d.querySelector('.x').hidden=!src;
+  draw();
+}
+
+const cv=$('#poster'),ctx=cv.getContext('2d'),W=2000,H=1414,BAND=[220,1190];
+function cover(img,x,y,w,h){const s=Math.max(w/img.width,h/img.height),sw=w/s,sh=h/s;ctx.drawImage(img,(img.width-sw)/2,(img.height-sh)/2,sw,sh,x,y,w,h);}
+function framed(img,path,box){ctx.save();path();ctx.clip();cover(img,...box);ctx.restore();path();ctx.lineWidth=22;ctx.lineJoin='round';ctx.strokeStyle='#000';ctx.stroke();}
+function rectPts(x,y,w,h,step){ // points clockwise around a rect, with outward normals
+  const pts=[],side=(x0,y0,dx,dy,len,nx,ny)=>{const n=Math.max(1,Math.round(len/step));for(let i=0;i<n;i++)pts.push([x0+dx*len*i/n,y0+dy*len*i/n,nx,ny]);};
+  side(x,y,1,0,w,0,-1);side(x+w,y,0,1,h,1,0);side(x+w,y+h,-1,0,w,0,1);side(x,y+h,0,-1,h,-1,0);return pts;
+}
+function scallop(x,y,w,h){return()=>{const p=rectPts(x,y,w,h,70);ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);p.forEach((a,i)=>{const b=p[(i+1)%p.length];ctx.quadraticCurveTo((a[0]+b[0])/2+a[2]*34,(a[1]+b[1])/2+a[3]*34,b[0],b[1]);});ctx.closePath();};}
+function jagged(x,y,w,h){return()=>{let seed=7;const r=()=>(seed=seed*16807%2147483647)/2147483647;const p=rectPts(x,y,w,h,22);ctx.beginPath();p.forEach(([px,py,nx,ny],i)=>{const o=(r()-.5)*46;ctx[i?'lineTo':'moveTo'](px+nx*o,py+ny*o);});ctx.closePath();};}
+function circle(cx,cy,rad){return()=>{ctx.beginPath();ctx.arc(cx,cy,rad,0,Math.PI*2);};}
+
+function readForm(){const f=$('#form').elements,o={};FIELDS.forEach(k=>o[k]=f[k].value.trim());const t=f.time;o.timeOk=t.value!==''&&t.validity.valid&&+t.value>=0;o.time=o.timeOk?String(+t.value):'';return o;}
+function draw(){
+  const o=readForm();
+  const te=$('#form').elements.time;$('#timeHint').hidden=o.timeOk||te.value===''&&!te.validity.badInput;
+  ctx.fillStyle='#1f1c18';ctx.fillRect(0,0,W,H);
+  if(imgs.loc)cover(imgs.loc,0,BAND[0],W,BAND[1]-BAND[0]);
+  else{ctx.fillStyle='#2a2319';ctx.fillRect(0,BAND[0],W,BAND[1]-BAND[0]);ctx.fillStyle='#a2957c';ctx.font='500 56px Barlow, sans-serif';ctx.textAlign='center';ctx.fillText('add the location screenshot',W/2+200,720);ctx.textAlign='left';}
+  if(imgs.land)framed(imgs.land,jagged(45,600,630,440),[45,600,630,440]);
+  if(imgs.mini)framed(imgs.mini,circle(360,360,340),[20,20,680,680]);
+  if(imgs.ref)framed(imgs.ref,scallop(1360,50,590,480),[1326,16,658,548]);
+  // title
+  ctx.fillStyle='#d4ab3a';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  const title=o.timeOk?o.time+'s land':(o.name||'lineup');
+  let fs=170;do{ctx.font='600 '+fs+'px "Cormorant Garamond", Georgia, serif';}while(ctx.measureText(title).width>540&&(fs-=10)>60);
+  ctx.fillText(title,1000,150);ctx.textAlign='left';
+  // info box
+  let head='',rows=[];
+  if(o.timeOk&&o.use==='post-plant'){const s=shootWindow(o.time);head='after speed-up, 2 beeps/s';rows=[['Full:',tick(s.full)],['Half:',tick(s.half)],['Tanked:',tick(s.ext)]];}
+  else if(o.timeOk&&o.use==='anti-phoenix'){head='anti-Phoenix';rows=[['',phoenixLine(o.time)]];}
+  let boxL=W;
+  if(rows.length){
+    const hf='500 40px "Cormorant Garamond", Georgia, serif',rf='600 66px "Cormorant Garamond", Georgia, serif',pad=28;
+    ctx.font=rf;const lw=Math.max(...rows.map(r=>ctx.measureText(r[0]).width)),vw=Math.max(...rows.map(r=>ctx.measureText(r[1]).width)),gap=lw?30:0;
+    ctx.font=hf;const w=Math.max(lw+gap+vw,ctx.measureText(head).width)+pad*2,h=90+rows.length*66,x=W-40-w,y=H-40-h;boxL=x;
+    ctx.fillStyle='#1a1714';ctx.fillRect(x,y,w,h);ctx.lineWidth=6;ctx.strokeStyle='#000';ctx.strokeRect(x-3,y-3,w+6,h+6);ctx.lineWidth=3;ctx.strokeStyle='#d9a92f';ctx.strokeRect(x+4,y+4,w-8,h-8);
+    ctx.fillStyle='#e9dfcb';ctx.fillText(head,x+pad,y+60);
+    ctx.font=rf;rows.forEach((r,i)=>{const by=y+128+i*66;ctx.fillStyle='#d4ab3a';ctx.fillText(r[0],x+pad,by);ctx.fillStyle='#f2e8d3';ctx.fillText(r[1],x+pad+lw+gap,by);});
+  }
+  // notes: bottom band, left of the box, max 2 lines
+  if(o.notes){
+    ctx.font='500 44px Barlow, sans-serif';ctx.fillStyle='#f2e8d3';
+    const maxW=Math.min(boxL,W)-80,lines=[''];
+    for(const w of o.notes.split(/\s+/)){const t=(lines.at(-1)+' '+w).trim();if(ctx.measureText(t).width<=maxW)lines[lines.length-1]=t;else lines.push(w);}
+    if(lines.length>2){lines.length=2;while(lines[1]&&ctx.measureText(lines[1]+'…').width>maxW)lines[1]=lines[1].slice(0,-1);lines[1]+='…';}
+    lines.forEach((l,i)=>ctx.fillText(l,40,BAND[1]+(lines.length===1?112:85+i*58)));
+  }
+}
+let raf=0;$('#form').addEventListener('input',()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(draw);});
+
+const toBlob=(type,q)=>new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(new Error('could not render the poster')),type,q));
+$('#dlBtn').onclick=async()=>{if(!imgs.loc)return say('Add the location screenshot first.',true);draw();download(await toBlob('image/png'),fileName(readForm(),'.png'));};
+$('#saveBtn').onclick=async()=>{
+  if(!db)return say('Saving is off in this browser. Use Download PNG.',true);
+  if(!imgs.loc)return say('Add the location screenshot first.',true);
+  draw();const o=readForm();delete o.timeOk;
+  const r={...o,id:crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2),order:Date.now(),created:Date.now(),png:await toBlob('image/jpeg',.9)};
+  try{await tx('readwrite',s=>s.put(r));}catch(e){return say(storeErr(e),true);}
+  await persist();await load();say('Saved “'+(r.name||'Untitled')+'” to your book.');
+};
+$('#clearBtn').onclick=()=>{SLOTS.forEach(([k])=>setImg(k,null));$('#form').reset();draw();say('');};
+
+/* ---------- tabs + boot ---------- */
+function tab(make){$('#make').hidden=!make;$('#book').hidden=make;$('#bookTools').hidden=make;$('#tabMake').classList.toggle('on',make);$('#tabBook').classList.toggle('on',!make);if(make)draw();}
+$('#tabBook').onclick=()=>tab(false);$('#tabMake').onclick=()=>tab(true);
+(async()=>{
+  // fonts must be in before the canvas draws, or the title renders in a fallback font
+  await Promise.all(['600 170px "Cormorant Garamond"','500 40px "Cormorant Garamond"','500 44px Barlow'].map(f=>document.fonts.load(f).catch(()=>{})));
+  draw();
+  try{db=await openDB();}catch(e){db=null;$('#banner').hidden=false;$('#saveBtn').disabled=true;}
+  if(db)await load();else{render();tab(true);}
+})();
+})();
+</script>
+</body>
+</html>
