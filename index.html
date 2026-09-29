@@ -210,7 +210,7 @@ function shootWindow(t){
   return {fresh:r(7-x),half:r(10.5-x)};
 }
 // after speed-up: beeps (2/s, rounded up, never early). Before it: seconds, since the beep rate there is different.
-const tick=s=>{if(s<0)return 'from '+(-s)+'s before speed-up';const n=Math.ceil(Math.round(s*BPS*10)/10);return n===0?'on speed-up':n+(n===1?' beep':' beeps');};
+const tick=s=>{if(s<0)return -s+'s early';const n=Math.ceil(Math.round(s*BPS*10)/10);return n===0?'on speed-up':n+(n===1?' beep':' beeps');};
 const windowText=t=>{const s=shootWindow(t);return s?'fresh: '+tick(s.fresh)+' · half done: '+tick(s.half):'';};
 const isPostPlant=r=>!r.use||r.use==='post-plant';
 // Phoenix ult lasts 10s. Land the molly ~1s before it ends: shoot at 9 - landTime.
@@ -288,7 +288,7 @@ function openV(i){
   $('#vImg').src=urls.get(r.id);
   $('#vNotes').textContent=r.notes||'';
   const s=isPostPlant(r)?shootWindow(r.time):null;
-  $('#vSpike').textContent=s?'After the speed-up (2 beeps/s): fresh spike (no defuse started, needs 7s) → shoot '+tick(s.fresh)+(s.fresh>0?' ('+s.fresh+'s)':'')+'. Half done (spike at the half checkpoint, needs 3.5s) → '+tick(s.half)+(s.half>0?' ('+s.half+'s)':'')+'. Both assume the defuser eats 2s of fire.'
+  $('#vSpike').textContent=s?'After the speed-up (2 beeps/s): fresh spike (no defuse started, needs 7s) → shoot '+tick(s.fresh)+(s.fresh>0?' ('+s.fresh+'s)':'')+'. Half done (spike at the half checkpoint, needs 3.5s) → '+tick(s.half)+(s.half>0?' ('+s.half+'s)':'')+'. Both assume the defuser eats 2s of fire.'+(s.fresh<0||s.half<0?' “Early” means you can shoot that many seconds before the speed-up and it still works.':'')
     :r.use==='anti-phoenix'?'Anti-Phoenix: his ult lasts 10s. '+phoenixLine(r.time)+' so it lands about 1s before the ult ends.':'';
   resetDel();$('#viewer').hidden=false;document.body.style.overflow='hidden';$('#vClose').focus();
 }
