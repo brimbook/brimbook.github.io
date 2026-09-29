@@ -178,7 +178,7 @@ dialog::backdrop{background:rgba(0,0,0,.7)}
   <div class="spike" id="vSpike"></div>
   <div class="actions">
     <button class="btn" id="vDl">Download</button>
-    <button class="btn" id="vEdit">Edit details</button>
+    <button class="btn" id="vEdit">Edit</button>
     <button class="btn bad" id="vDel">Delete</button>
   </div>
 </div>
@@ -188,8 +188,9 @@ dialog::backdrop{background:rgba(0,0,0,.7)}
     <label>Name<input name="name"></label>
     <div class="two"><label>Map<input name="map" list="mapList"></label><label>Site<input name="site"></label></div>
     <label>Side<select name="side"><option value="attack">Attack</option><option value="defense">Defense</option><option value="both">Both</option></select></label>
+    <label>Land time (s)<input name="time" type="number" step="0.1" min="0" inputmode="decimal"></label>
     <label>Notes<textarea name="notes" maxlength="200"></textarea></label>
-    <div class="slotnote">Land time and the poster image are baked in. To change them, make a new poster.</div>
+    <div class="slotnote">This poster was imported without its screenshots, so only the beep box can be redrawn. Notes and name change in the book, not on the image.</div>
     <div class="actions"><button class="btn gold" value="save">Save</button><button class="btn" value="cancel">Cancel</button></div>
   </form>
 </dialog>
@@ -314,25 +315,48 @@ $('#vDel').onclick=async()=>{
   try{await tx('readwrite',s=>s.delete(r.id));}catch(e){return say('Could not delete: '+e.message,true);}
   say('Deleted “'+(r.name||'Untitled')+'”.');const i=vi;await load();view.length?openV(Math.min(i,view.length-1)):closeV();
 };
-$('#vEdit').onclick=()=>{const r=view[vi],f=$('#editForm');['name','map','site','side','notes'].forEach(k=>f.elements[k].value=r[k]||'');if(!r.side)f.elements.side.value='both';$('#editDlg').returnValue='';$('#editDlg').showModal();};
+let dlgRec=null;
+$('#vEdit').onclick=()=>{const r=view[vi],f=$('#editForm');if(r.src)return editInMaker(r);dlgRec=r;['name','map','site','side','time','notes'].forEach(k=>f.elements[k].value=r[k]||'');if(!r.side)f.elements.side.value='both';$('#editDlg').returnValue='';$('#editDlg').showModal();};
 $('#editDlg').addEventListener('close',async()=>{
   if($('#editDlg').returnValue!=='save')return;
-  const f=$('#editForm'),r={...view[vi]};['name','map','site','side','notes'].forEach(k=>r[k]=f.elements[k].value.trim());
+  const f=$('#editForm'),old=dlgRec,r={...old};['name','map','site','side','notes'].forEach(k=>r[k]=f.elements[k].value.trim());
+  const t=f.elements.time;if(t.value!==''&&t.validity.valid&&+t.value>=0)r.time=String(+t.value);
+  let note='Saved.';
+  if(r.time!==old.time&&isPostPlant(r)){const png=await repaintBox(old.png,r.time);png?r.png=png:note='Saved. No beep box found on this poster, so the image is unchanged.';}
   try{await tx('readwrite',s=>s.put(r));}catch(e){return say(storeErr(e),true);}
-  const id=r.id;await load();const i=view.findIndex(x=>x.id===id);i<0?closeV():openV(i);say('Saved.');
+  const id=r.id;await load();const i=view.findIndex(x=>x.id===id);i<0?closeV():openV(i);say(note);
 });
+
+// Imported posters have no screenshots: repaint just the beep box. Returns a new JPEG blob, or null if no box is found.
+async function repaintBox(blob,time){
+  const bmp=await createImageBitmap(blob);if(bmp.width!==2000||bmp.height!==1414){bmp.close();return null;}
+  const c=document.createElement('canvas');c.width=2000;c.height=1414;const g=c.getContext('2d');g.drawImage(bmp,0,0);bmp.close();
+  const X0=1100,Y0=900,w=900,h=514,px=g.getImageData(X0,Y0,w,h).data,rows=new Array(h).fill(0),cols=new Array(w).fill(0);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=(y*w+x)*4;if(Math.abs(px[i]-23)+Math.abs(px[i+1]-22)+Math.abs(px[i+2]-20)<8){rows[y]++;cols[x]++;}}
+  const ry=rows.map((n,i)=>n>150?i:-1).filter(i=>i>=0),cx=cols.map((n,i)=>n>100?i:-1).filter(i=>i>=0);
+  if(!ry.length||!cx.length)return null;
+  const T=Y0+ry[0],B=Y0+ry.at(-1),L=X0+cx[0],Rr=X0+cx.at(-1);if(B-T<150||Rr-L<250)return null;
+  const s=shootWindow(time),rw=[['Fresh spike:',tick(s.fresh)],['Half done:',tick(s.half)]],head='after speed-up, 2 beeps/s',W=Rr-L;
+  let fs=70,lw,vw;do{g.font='600 '+fs+'px "Cormorant Garamond", Georgia, serif';lw=Math.max(...rw.map(r=>g.measureText(r[0]).width));vw=Math.max(...rw.map(r=>g.measureText(r[1]).width));}while(lw+30+vw+60>W&&(fs-=2)>40);
+  let hs=44;do{g.font='500 '+hs+'px "Cormorant Garamond", Georgia, serif';}while(g.measureText(head).width+60>W&&(hs-=2)>24);
+  g.fillStyle='#171614';g.fillRect(L,T,W+1,B-T+1);g.textBaseline='alphabetic';g.textAlign='left';
+  const top=T+(B-T-268)/2;g.fillStyle='#e9dfcb';g.fillText(head,L+30,top+62);
+  g.font='600 '+fs+'px "Cormorant Garamond", Georgia, serif';rw.forEach((r,i)=>{const y=top+160+i*88;g.fillStyle='#d4ab3a';g.fillText(r[0],L+30,y);g.fillStyle='#f2e8d3';g.fillText(r[1],L+30+lw+30,y);});
+  return new Promise(res=>c.toBlob(res,'image/jpeg',.92));
+}
 
 /* export / import */
 const toDataURL=b=>new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=()=>rej(fr.error);fr.readAsDataURL(b);});
 $('#exportBtn').onclick=async()=>{
   if(!db)return say('Nothing to export: saving is off in this browser.',true);
   if(!all.length)return say('Your book is empty.',true);
-  const lineups=await Promise.all(all.map(async r=>({...r,png:await toDataURL(r.png)})));
+  const lineups=await Promise.all(all.map(async r=>{const o={...r,png:await toDataURL(r.png)};if(r.src){o.src={};for(const k in r.src)o.src[k]=await toDataURL(r.src[k]);}return o;}));
   download(new Blob([JSON.stringify({app:'brim-book',version:1,lineups})],{type:'application/json'}),'brim-book-'+new Date().toISOString().slice(0,10)+'.json');
   say('Exported '+plural(lineups.length)+'.');
 };
 $('#importBtn').onclick=()=>db?$('#importFile').click():say('Import needs saving, which is off in this browser.',true);
 const FIELDS=['name','map','site','side','time','use','notes'];
+const IMG_URL=/^data:image\/(png|jpeg|webp);base64,/;
 $('#importFile').onchange=async e=>{
   const file=e.target.files[0];e.target.value='';if(!file)return;
   let recs;
@@ -340,9 +364,10 @@ $('#importFile').onchange=async e=>{
     const d=JSON.parse(await file.text());
     if(!d||d.app!=='brim-book'||!Array.isArray(d.lineups))throw new Error('not a Brim Book export');
     recs=await Promise.all(d.lineups.map(async(x,i)=>{
-      if(!x||typeof x.id!=='string'||!x.id||typeof x.png!=='string'||!/^data:image\/(png|jpeg|webp);base64,/.test(x.png))throw new Error('lineup #'+(i+1)+' is broken');
+      if(!x||typeof x.id!=='string'||!x.id||typeof x.png!=='string'||!IMG_URL.test(x.png))throw new Error('lineup #'+(i+1)+' is broken');
       const png=await (await fetch(x.png)).blob();
       const r={id:x.id,png,order:Number(x.order)||Date.now(),created:Number(x.created)||Date.now()};
+      if(x.src&&typeof x.src==='object'){r.src={};for(const k of ['loc','mini','ref','land'])if(x.src[k]!=null){if(typeof x.src[k]!=='string'||!IMG_URL.test(x.src[k]))throw new Error('lineup #'+(i+1)+' has a broken screenshot');r.src[k]=await (await fetch(x.src[k])).blob();}}
       FIELDS.forEach(k=>r[k]=x[k]==null?'':String(x[k]).slice(0,200));
       return r;
     }));
@@ -450,7 +475,9 @@ $('#saveBtn').onclick=async()=>{
   if(!db)return say('Saving is off in this browser. Use Download PNG.',true);
   if(!imgs.loc)return say('Add the location screenshot first.',true);
   draw();const o=readForm();delete o.timeOk;
-  const r={...o,id:crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2),order:Date.now(),created:Date.now(),png:await toBlob('image/jpeg',.9)};
+  const prev=editing&&all.find(x=>x.id===editing);
+  const src={};for(const [k] of SLOTS)if(imgs[k])src[k]=await imgBlob(imgs[k]);
+  const r={...o,id:prev?prev.id:crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2),order:prev?prev.order:Date.now(),created:prev?prev.created:Date.now(),png:await toBlob('image/jpeg',.9),src};
   try{await tx('readwrite',s=>s.put(r));}catch(e){return say(storeErr(e),true);}
   await persist();
   // back to the book with filters cleared, so the new card is guaranteed to be visible
@@ -458,12 +485,23 @@ $('#saveBtn').onclick=async()=>{
   say('Saved “'+(r.name||'Untitled')+'” to your book.');
   const c=$('.card[data-id="'+r.id+'"]');if(c){c.classList.add('new');c.scrollIntoView({block:'center'});setTimeout(()=>c.classList.remove('new'),2500);}
 };
-function clearMaker(){SLOTS.forEach(([k])=>setImg(k,null));$('#form').reset();draw();}
+function clearMaker(){SLOTS.forEach(([k])=>setImg(k,null));$('#form').reset();setEditing(null);draw();}
+// the screenshots are kept (already downscaled) so a lineup can be reopened and edited later
+function imgBlob(img){const c=document.createElement('canvas');c.width=img.width;c.height=img.height;c.getContext('2d').drawImage(img,0,0);return new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('could not store a screenshot')),'image/jpeg',.9));}
+let editing=null;
+function setEditing(id){editing=id;$('#saveBtn').disabled=!db;$('#saveBtn').textContent=id?'Save changes':'Save to book';$('#tabMake').textContent=id?'Editing lineup':'+ New lineup';}
+async function editInMaker(r){
+  closeV();tab(true);clearMaker();
+  const f=$('#form').elements;FIELDS.forEach(k=>{if(f[k])f[k].value=r[k]||'';});if(!r.side)f.side.value='both';if(!r.use)f.use.value='post-plant';
+  setEditing(r.id);$('#saveBtn').disabled=true; // no saving until every screenshot is back in its box
+  for(const [k] of SLOTS)if(r.src[k]){await loadImg(k,r.src[k]);if(editing!==r.id)return setImg(k,null);} // edit cancelled mid-load
+  $('#saveBtn').disabled=!db;draw();say('Editing “'+(r.name||'Untitled')+'”. Save changes to update it, or go back to the book to cancel.');
+}
 $('#clearBtn').onclick=()=>{clearMaker();say('');};
 
 /* ---------- tabs + boot ---------- */
 function tab(make){$('#make').hidden=!make;$('#book').hidden=make;$('#bookTools').hidden=make;$('#tabMake').classList.toggle('on',make);$('#tabBook').classList.toggle('on',!make);if(make)draw();}
-$('#tabBook').onclick=()=>tab(false);$('#tabMake').onclick=()=>tab(true);
+$('#tabBook').onclick=()=>{if(editing){clearMaker();say('');}tab(false);};$('#tabMake').onclick=()=>{if(editing){clearMaker();say('');}tab(true);};
 (async()=>{
   // fonts must be in before the canvas draws, or the title renders in a fallback font
   await Promise.all(['600 170px "Cormorant Garamond"','500 40px "Cormorant Garamond"','500 44px Barlow'].map(f=>document.fonts.load(f).catch(()=>{})));
