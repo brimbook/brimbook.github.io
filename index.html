@@ -206,11 +206,11 @@ function say(t,err){const m=$('#msg');m.textContent=t||'';m.classList.toggle('er
 const BPS=2;
 function shootWindow(t){
   const x=parseFloat(t); if(isNaN(x))return null;
-  const ticks=s=>Math.max(0,Math.ceil(Math.round(s*BPS*10)/10));
-  const sec=s=>Math.max(0,Math.round(s*10)/10);
-  return {fresh:ticks(7-x),half:ticks(10.5-x),freshS:sec(7-x),halfS:sec(10.5-x)};
+  const r=s=>Math.round(s*10)/10; // seconds after speed-up to shoot; negative = that many seconds BEFORE it
+  return {fresh:r(7-x),half:r(10.5-x)};
 }
-const tick=n=>n===0?'on speed-up':n+(n===1?' beep':' beeps');
+// after speed-up: beeps (2/s, rounded up, never early). Before it: seconds, since the beep rate there is different.
+const tick=s=>{if(s<0)return 'from '+(-s)+'s before speed-up';const n=Math.ceil(Math.round(s*BPS*10)/10);return n===0?'on speed-up':n+(n===1?' beep':' beeps');};
 const windowText=t=>{const s=shootWindow(t);return s?'fresh: '+tick(s.fresh)+' · half done: '+tick(s.half):'';};
 const isPostPlant=r=>!r.use||r.use==='post-plant';
 // Phoenix ult lasts 10s. Land the molly ~1s before it ends: shoot at 9 - landTime.
@@ -288,7 +288,7 @@ function openV(i){
   $('#vImg').src=urls.get(r.id);
   $('#vNotes').textContent=r.notes||'';
   const s=isPostPlant(r)?shootWindow(r.time):null;
-  $('#vSpike').textContent=s?'After the speed-up (2 beeps/s): fresh spike (no defuse started, needs 7s) → shoot '+tick(s.fresh)+(s.fresh?' ('+s.freshS+'s)':'')+'. Half done (spike at the half checkpoint, needs 3.5s) → '+tick(s.half)+(s.half?' ('+s.halfS+'s)':'')+'. Both assume the defuser eats 2s of fire.'
+  $('#vSpike').textContent=s?'After the speed-up (2 beeps/s): fresh spike (no defuse started, needs 7s) → shoot '+tick(s.fresh)+(s.fresh>0?' ('+s.fresh+'s)':'')+'. Half done (spike at the half checkpoint, needs 3.5s) → '+tick(s.half)+(s.half>0?' ('+s.half+'s)':'')+'. Both assume the defuser eats 2s of fire.'
     :r.use==='anti-phoenix'?'Anti-Phoenix: his ult lasts 10s. '+phoenixLine(r.time)+' so it lands about 1s before the ult ends.':'';
   resetDel();$('#viewer').hidden=false;document.body.style.overflow='hidden';$('#vClose').focus();
 }
