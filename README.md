@@ -2,7 +2,7 @@
 
 Make Valorant Brimstone lineup posters and keep them in your own lineup book.
 
-**Use it:** https://henry-bonikowsky.github.io/brim-book/
+**Use it:** https://brimbook.github.io/
 
 1. Hit **+ New lineup**. Add 4 screenshots: location, minimap, reference (where to aim), land spot. Snip them and paste with Ctrl+V, drop them, or pick files.
 2. Fill in the land time. For post-plant lineups the poster gets a beep box: how many spike beeps after the speed-up to wait before you shoot so the defuse can't finish, for a fresh spike and for one already at the half checkpoint (both assume the defuser tanks 2s of fire). For anti-Phoenix lineups it shows when to shoot after he ults.
